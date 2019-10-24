@@ -200,12 +200,17 @@ metadata {
 // Defer full initialization until after parameters are set manually.
 def installed() {
 
-  state.handlers = [:];
-  state.connected = false
-  sendEvent(name: "connection", value: "disconnected", isStateChange: true)
+  state.handlers = [:]
 
-  if (settings.broker != null) {
-    initialize()
+  synchronized (state.handlers) {
+
+    sendEvent(name: "connection", value: "disconnected", isStateChange: true)
+
+    if (settings.broker?.trim()) {
+
+      initialize()
+
+    }
   }
 }
 
@@ -400,8 +405,7 @@ def connect() {
 
         interfaces.mqtt.connect(settings.broker, settings.clientId,
                                 settings.username, settings.password,
-                                lastWillTopic: settings.twtTopic,
-                                lastWillQos: 0,
+                                lastWillTopic: settings.twtTopic, lastWillQos: 0,
                                 lastWillMessage: settings.lwtMessage)
 
         state.connected = true;
@@ -455,14 +459,12 @@ def disconnect() {
   }
 }
 
-// Unsubscribe from the topic currently handled by the child device with the
-// given id.
+// Unsubscribe from the topic currently handled by the child device with the given id.
 def unsubscribeHandler(String id) {
 
   synchronized (state.handlers) {
 
-    // note: the version of groovy in hubitat seems to be missing
-    // Map.removeAll()
+    // note: the version of groovy in hubitat seems to be missing Map.removeAll()
 
     def topic = null
 
