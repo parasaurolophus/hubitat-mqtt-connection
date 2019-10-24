@@ -1,0 +1,62 @@
+@startuml
+
+autonumber
+
+title Typical MQTT Messaging Flow
+
+actor "User" as user
+participant "Dashboard\n(mobile app)" as dashboard
+participant "MQTT\nBroker" as broker #aquamarine
+participant "MQTT Connection\n(virtual device)" as connection #pink
+participant "MQTT Handler\n(virtual device)" as handler #pink
+participant "Rule Machine\n(built-in app)" as rm #pink
+participant "Physical\nDevice" as device #aquamarine
+
+user -> dashboard: press button
+
+note over dashboard, broker
+LAN or internet
+end note
+
+dashboard -> broker: MQTT message
+
+note over broker, connection
+LAN
+end note
+
+broker -> connection: MQTT message
+
+note over connection, rm
+Hubitat
+end note
+
+connection -> connection: find handler for MQTT topic
+
+opt handler found
+  connection -> handler: send event
+  handler -> rm: custom attribute trigger
+  rm -> rm: evaluate conditions
+
+  note over rm, device
+  z-wave, zigbee, wi-fi
+  end note
+
+  rm -> device: device action
+end
+
+note over device
+the flow is identical from
+here on no matter the reason
+for the state change
+end note
+
+device -> device: change state
+device -> rm: trigger
+rm -> rm: evaluate conditions
+rm -> connection: publish
+connection -> broker: MQTT
+broker -> dashboard: MQTT
+dashboard -> dashboard: update display
+dashboard -> user: view
+
+@enduml
