@@ -259,11 +259,8 @@ def publish(String topic, String payload, int qos = 2,
 // RM-compatible overload for publish(String, String, int, boolean).
 def publish(String topic, String payload, int qos, String retained) {
 
-  synchronized (state.handlers) {
-
     publish(topic, payload, qos, retained.toBoolean())
 
-  }
 }
 
 // Subscribe to the specified topic at the specified quality of service setting.
@@ -367,7 +364,6 @@ def parse(String event) {
   synchronized (state.handlers) {
 
     def message = interfaces.mqtt.parseMessage(event)
-    def timestamp = new Date().getTime()
 
     sendEvent(name: "mqtt", value: message)
 
