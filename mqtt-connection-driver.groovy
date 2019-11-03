@@ -420,7 +420,7 @@ def connect() {
       } catch (e) {
 
         log.error "error connecting to MQTT broker: ${e}"
-        pauseExecution(5000)
+        state.handlers.wait(5000)
 
       }
     }
