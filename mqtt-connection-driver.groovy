@@ -188,7 +188,7 @@ metadata {
       description: "LWT message body when disconnecting from broker",
       required: true,
       displayDuringSetup: true,
-      defaultValue: "lwt"
+      defaultValue: "disconnected"
     )
 
   }
@@ -259,7 +259,7 @@ def publish(String topic, String payload, int qos = 2,
 // RM-compatible overload for publish(String, String, int, boolean).
 def publish(String topic, String payload, int qos, String retained) {
 
-    publish(topic, payload, qos, retained.toBoolean())
+  publish(topic, payload, qos, retained.toBoolean())
 
 }
 
@@ -271,6 +271,7 @@ def subscribe(String topic, int qos = 2) {
     try {
 
       interfaces.mqtt.subscribe(topic, qos)
+      log.info "subscribed to ${topic}"
 
     } catch (e) {
 
@@ -288,6 +289,7 @@ def unsubscribe(String topic) {
     try {
 
       interfaces.mqtt.unsubscribe(topic)
+      log.info "unsubscribed from ${topic}"
 
     } catch (e) {
 
@@ -395,21 +397,21 @@ def connect() {
 
   synchronized (state.handlers) {
 
-    if (!state.connected) {
+    while (!state.connected) {
 
       try {
 
         interfaces.mqtt.connect(settings.broker, settings.clientId,
                                 settings.username, settings.password,
-                                lastWillTopic: settings.twtTopic, lastWillQos: 0,
+                                lastWillTopic: settings.lwtTopic, lastWillQos: 0,
                                 lastWillMessage: settings.lwtMessage)
 
         state.connected = true;
+        log.info "connected to " + settings.broker
 
         state.handlers.each { topic, subscription ->
 
           subscribe(topic, subscription.qos)
-          log.info "subscribed to ${topic}"
 
         }
 
@@ -418,6 +420,7 @@ def connect() {
       } catch (e) {
 
         log.error "error connecting to MQTT broker: ${e}"
+        pauseExecution(5000)
 
       }
     }
@@ -434,7 +437,6 @@ def disconnect() {
       state.handlers.each { topic, subscription ->
 
         unsubscribe(topic)
-        log.info "unsubscribed from ${topic}"
 
       }
 
@@ -449,6 +451,7 @@ def disconnect() {
       }
 
       state.connected = false;
+      log.info "disconnected from " + settings.broker
       sendEvent(name: "connection", value: "disconnected", isStateChange: true)
 
     }
