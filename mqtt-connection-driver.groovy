@@ -204,7 +204,7 @@ def installed() {
 
   synchronized (state.handlers) {
 
-    sendEvent(name: "connection", value: "disconnected", isStateChange: true)
+    sendEvent(name: "connection", value: "disconnected")
 
     if (settings.broker?.trim()) {
 
@@ -415,7 +415,7 @@ def connect() {
 
         }
 
-        sendEvent(name: "connection", value: "connected", isStateChange: true)
+        sendEvent(name: "connection", value: "connected")
 
       } catch (e) {
 
@@ -452,7 +452,7 @@ def disconnect() {
 
       state.connected = false;
       log.info "disconnected from " + settings.broker
-      sendEvent(name: "connection", value: "disconnected", isStateChange: true)
+      sendEvent(name: "connection", value: "disconnected")
 
     }
   }
