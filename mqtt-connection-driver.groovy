@@ -123,6 +123,10 @@ metadata {
       [name: "device network id", type: "STRING"]
     ]
 
+    command "connect"
+
+    command "disconnect"
+
     // State of the connection to the MQTT broker ("connected" or
     // "disconnected").
     attribute "connection", "STRING"
@@ -237,6 +241,72 @@ def initialize() {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Custom commands
+
+// Connect to the MQTT broker.
+def connect() {
+
+  synchronized (state.handlers) {
+
+    while (!state.connected) {
+
+      try {
+
+        interfaces.mqtt.connect(settings.broker, settings.clientId,
+                                settings.username, settings.password,
+                                lastWillTopic: settings.lwtTopic, lastWillQos: 0,
+                                lastWillMessage: settings.lwtMessage)
+
+        state.connected = true;
+        log.info "connected to " + settings.broker
+
+        state.handlers.each { topic, subscription ->
+
+          subscribe(topic, subscription.qos)
+
+        }
+
+        sendEvent(name: "connection", value: "connected")
+
+      } catch (e) {
+
+        log.error "error connecting to MQTT broker: ${e}"
+        state.handlers.wait(5000)
+
+      }
+    }
+  }
+}
+
+// Disconnect from the MQTT broker.
+def disconnect() {
+
+  synchronized (state.handlers) {
+
+    if (state.connected) {
+
+      state.handlers.each { topic, subscription ->
+
+        unsubscribe(topic)
+
+      }
+
+      try {
+
+        interfaces.mqtt.disconnect()
+
+      } catch (e) {
+
+        log.error "error disconnecting: ${e}"
+
+      }
+
+      state.connected = false;
+      log.info "disconnected from " + settings.broker
+      sendEvent(name: "connection", value: "disconnected")
+
+    }
+  }
+}
 
 // Publish the given payload on the given MQTT topic.
 def publish(String topic, String payload, int qos = 2,
@@ -391,72 +461,6 @@ def parse(String event) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Helper functions
-
-// Connect to the MQTT broker.
-def connect() {
-
-  synchronized (state.handlers) {
-
-    while (!state.connected) {
-
-      try {
-
-        interfaces.mqtt.connect(settings.broker, settings.clientId,
-                                settings.username, settings.password,
-                                lastWillTopic: settings.lwtTopic, lastWillQos: 0,
-                                lastWillMessage: settings.lwtMessage)
-
-        state.connected = true;
-        log.info "connected to " + settings.broker
-
-        state.handlers.each { topic, subscription ->
-
-          subscribe(topic, subscription.qos)
-
-        }
-
-        sendEvent(name: "connection", value: "connected")
-
-      } catch (e) {
-
-        log.error "error connecting to MQTT broker: ${e}"
-        state.handlers.wait(5000)
-
-      }
-    }
-  }
-}
-
-// Disconnect from the MQTT broker.
-def disconnect() {
-
-  synchronized (state.handlers) {
-
-    if (state.connected) {
-
-      state.handlers.each { topic, subscription ->
-
-        unsubscribe(topic)
-
-      }
-
-      try {
-
-        interfaces.mqtt.disconnect()
-
-      } catch (e) {
-
-        log.error "error disconnecting: ${e}"
-
-      }
-
-      state.connected = false;
-      log.info "disconnected from " + settings.broker
-      sendEvent(name: "connection", value: "disconnected")
-
-    }
-  }
-}
 
 // Unsubscribe from the topic currently handled by the child device with the given id.
 def unsubscribeHandler(String id) {
