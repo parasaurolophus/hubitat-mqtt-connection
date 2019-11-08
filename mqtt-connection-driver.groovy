@@ -35,14 +35,14 @@
 //   - Note that due to deficiencies in Rule Machine you must select the
 //     "Actuator" capability when starting the process of choosing a particular
 //     device whose method is to be invoked by "run custom action" in order to
-//     see you MQTT Connection device offered as an option among the devices
+//     see your MQTT Connection device offered as an option among the devices
 //     whose custom action you wish to invoke.
 //
 // - Send child device events on receipt of messages on subscribed topics to
 //   support "custom attribute" triggers and actions in Rule Machine
 //
 //    - When using a "custom attribute" action, you can access the actual
-//      message payload the standard `%value%` variable
+//      message payload using the built-in `%value%` variable
 
 // Installation:
 
@@ -61,14 +61,11 @@
 //
 // 3. Click the "Save Preferences" button
 //
-// 4. Use the "Publish," "Subscribe" and "Unsubscribe" buttons to send and
-//    receive MQTT messages
+// 4. Use "Run custom action" in RM to invoke "publish"
 //
-// 5. Use "Run custom action" in RM to invoke "publish"
+// 5. Use "Add Handler" to add MQTT Handler child devices for specific topics
 //
-// 6. Use "Add Handler" to add MQTT Handler child devices for specific topics
-//
-// 7. Use "Custom Attribute" triggers and actions to access received messages in
+// 6. Use "Custom Attribute" triggers and actions to access received messages in
 //    RM
 
 metadata {
@@ -91,17 +88,6 @@ metadata {
       [name: "payload", type: "STRING"],
       [name: "qos", type: "INTEGER"],
       [name: "retain", type: "STRING"]
-    ]
-
-    // Subscribe to a MQTT topic.
-    command "subscribe", [
-      [name: "topic", type: "STRING"],
-      [name: "qos", type:"INTEGER"]
-    ]
-
-    // Unsubscribe from a MQTT topic filter.
-    command "unsubscribe", [
-      [name: "topic", type: "STRING"]
     ]
 
     // Add a child MQTT Handler device.
@@ -130,9 +116,6 @@ metadata {
     // State of the connection to the MQTT broker ("connected" or
     // "disconnected").
     attribute "connection", "STRING"
-
-    // The most recently received MQTT message.
-    attribute "mqtt", "JSON_OBJECT"
 
   }
 
@@ -256,7 +239,8 @@ def connect() {
                                 lastWillTopic: settings.lwtTopic, lastWillQos: 0,
                                 lastWillMessage: settings.lwtMessage)
 
-        state.connected = true;
+        state.connected = true
+        state.handlers.notifyAll()
         log.info "connected to " + settings.broker
 
         state.handlers.each { topic, subscription ->
@@ -300,7 +284,8 @@ def disconnect() {
 
       }
 
-      state.connected = false;
+      state.connected = false
+      state.handlers.notifyAll()
       log.info "disconnected from " + settings.broker
       sendEvent(name: "connection", value: "disconnected")
 
@@ -331,42 +316,6 @@ def publish(String topic, String payload, int qos, String retained) {
 
   publish(topic, payload, qos, retained.toBoolean())
 
-}
-
-// Subscribe to the specified topic at the specified quality of service setting.
-def subscribe(String topic, int qos = 2) {
-
-  synchronized (state.handlers) {
-
-    try {
-
-      interfaces.mqtt.subscribe(topic, qos)
-      log.info "subscribed to ${topic}"
-
-    } catch (e) {
-
-      log.error "error subscribing to topic ${topic} (qos=${qos})"
-
-    }
-  }
-}
-
-// Unsubscribe from the specified topic.
-def unsubscribe(String topic) {
-
-  synchronized (state.handlers) {
-
-    try {
-
-      interfaces.mqtt.unsubscribe(topic)
-      log.info "unsubscribed from ${topic}"
-
-    } catch (e) {
-
-      log.error "error unsubscribing from topic ${topic}"
-
-    }
-  }
 }
 
 // Add a MQTT Handler child device subscribed to the specified topic.
@@ -407,7 +356,6 @@ def replaceTopic(String topic, int qos, String id) {
   }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // MQTT client call-back functions
 
@@ -437,8 +385,6 @@ def parse(String event) {
 
     def message = interfaces.mqtt.parseMessage(event)
 
-    sendEvent(name: "mqtt", value: message)
-
     for (element in state.handlers) {
 
       if (element.key.equals(message.topic)) {
@@ -461,6 +407,42 @@ def parse(String event) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Helper functions
+
+// Subscribe to the specified topic at the specified quality of service setting.
+def subscribe(String topic, int qos = 2) {
+
+  synchronized (state.handlers) {
+
+    try {
+
+      interfaces.mqtt.subscribe(topic, qos)
+      log.info "subscribed to ${topic}"
+
+    } catch (e) {
+
+      log.error "error subscribing to topic ${topic} (qos=${qos})"
+
+    }
+  }
+}
+
+// Unsubscribe from the specified topic.
+def unsubscribe(String topic) {
+
+  synchronized (state.handlers) {
+
+    try {
+
+      interfaces.mqtt.unsubscribe(topic)
+      log.info "unsubscribed from ${topic}"
+
+    } catch (e) {
+
+      log.error "error unsubscribing from topic ${topic}"
+
+    }
+  }
+}
 
 // Unsubscribe from the topic currently handled by the child device with the given id.
 def unsubscribeHandler(String id) {
