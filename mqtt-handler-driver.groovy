@@ -27,9 +27,6 @@ metadata {
     // Declare a capability that is compatible with RM
     capability "Initialize"
 
-    // Topic of incoming message.
-    attribute "topic", "STRING"
-
     // Payload of incoming message.
     attribute "payload", "STRING"
 
