@@ -230,7 +230,14 @@ def connect() {
 
   synchronized (state.handlers) {
 
-    while (!state.connected) {
+    // keep trying to connect until successful
+    // or some other thread indicates that this
+    // attempt should cease
+
+    state.reconnect = true
+    state.handlers.notifyAll()
+
+    while (!state.connected && state.reconnect) {
 
       try {
 
@@ -265,6 +272,11 @@ def connect() {
 def disconnect() {
 
   synchronized (state.handlers) {
+
+    // kill any threads that are attempting
+    // to connect
+    state.reconnect = false
+    state.handlers.notifyAll()
 
     if (state.connected) {
 
