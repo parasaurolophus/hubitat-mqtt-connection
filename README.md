@@ -29,7 +29,7 @@ interface.
 
 - Learn something about Hubitat driver development.
 
-See <http://kirkrader.gitlab.io/docs/node-red/> for information on the
+See <https://gitlab.com/kirkrader/nodered> for information on the
 particular home automation setup into which these custom Hubitat devices were
 designed to fit. In particular, note that the bulk of automation logic is
 actually implemented using [Node-RED][] using MQTT as the primary communications
