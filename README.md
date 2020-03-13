@@ -1,6 +1,10 @@
-Copyright &copy; 2019 Kirk Rader
+Copyright &copy; 2019-2020 Kirk Rader
 
 > Licensed under the Apache License 2.0. See [LICENSE.txt](LICENSE.txt) for details.
+
+> **Note:** development ceased since I no longer use [Hubitat][hubitat elevation]
+> in my automation set-up. As described below, this was only ever offered as a
+> coding example, in any case.
 
 # Hubitat MQTT Connection
 
