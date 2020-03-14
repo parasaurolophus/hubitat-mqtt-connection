@@ -18,7 +18,7 @@ interface.
 > with products like [openHAB][] or [Home Assistant][] are specifically not
 > supported. There is already an excellent client app under development, though
 > at the time of this writing not yet publicly released, that will support such
-> features (see <https://community.hubitat.com/t/beta-mqtt-app/32750>). In all
+> features (see <https://github.com/xAPPO/MQTT>). In all
 > likelihood you will be far happier waiting for that app to be released than
 > trying to use these drivers other than as example code and, maybe, inspiration
 > for your own efforts.
