@@ -4,7 +4,8 @@ Copyright &copy; 2019-2020 Kirk Rader
 
 > **Note:** development ceased since I no longer use [Hubitat][hubitat elevation]
 > in my automation set-up. As described below, this was only ever offered as a
-> coding example, in any case.
+> coding example, in any case. I recommend <https://github.com/xAPPO/MQTT> for
+> a more production-ready wrapper for MQTT within Hubitat.
 
 # Hubitat MQTT Connection
 
@@ -16,12 +17,10 @@ interface.
 
 > Automatic device discovery using conventions like [homie][] for integration
 > with products like [openHAB][] or [Home Assistant][] are specifically not
-> supported. There is already an excellent client app under development, though
-> at the time of this writing not yet publicly released, that will support such
-> features (see <https://github.com/xAPPO/MQTT>). In all
-> likelihood you will be far happier waiting for that app to be released than
-> trying to use these drivers other than as example code and, maybe, inspiration
-> for your own efforts.
+> supported. There is already an excellent client app under development, supports
+> such features (see <https://github.com/xAPPO/MQTT>). In all likelihood you will
+> be far happier with that app than trying to use these drivers other than as
+> example code and, maybe, inspiration for your own efforts.
 
 ## Motivation
 
